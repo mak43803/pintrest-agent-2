@@ -33,15 +33,15 @@ TARGET MARKET:
 - Gender: 70-90% Female
 
 TARGET INTERESTS & VIRAL PRODUCT SEEDS:
-Home Decor, Interior Design, Luxury Living, Minimal Home, Modern Home, Cozy Living,
-Apartment Decor, Kitchen Decor, Bathroom Decor, Bedroom Decor, Organization, Amazon Finds,
-Small Space Living, Japandi, Scandinavian, Organic Modern, Cottagecore & Northern Hygge Aesthetics,
+Strictly 100% Home Decor, Interior Design, Luxury Living, Minimal Home, Modern Home, Cozy Living,
+Apartment Decor, Kitchen Decor, Bathroom Decor, Bedroom Decor, Home Organization, Amazon Home Finds,
+Small Space Living, Japandi, Scandinavian, Organic Modern, Cottagecore & Northern Hygge Aesthetics.
+STRICTLY PROHIBITED: NO shoes, NO sneakers, NO charms, NO apparel, NO clothing, NO makeup, NO jewelry, NO books.
 - US, UK & Canada Top Female Best-Sellers: Glass Cups with Bamboo Lids & Straws, Amber Glass Soap Dispensers,
   Cordless Rechargeable Crystal Touch Table Lamps, Sunset Projection Lamps, Wavy Asymmetric Floor Mirrors,
   Sage Green Checkered Throw Blankets, Chunky Knit Blankets, Flame Effect LED Diffusers, Ribbed Coffee Mugs,
   Acrylic Pantry Bins, Bamboo Bath Caddies, Entryway Boot Benches, Heated Towel Racks, Under Bed Storage Organizers,
   Waffle Weave Bedding, Electric Candle Lighters, Wabi-Sabi Ceramic Vases, Boucle Accent Chairs.
-Seasonal (Fall, Halloween, Christmas, Spring, Summer), Gift Ideas.
 
 DESIGN STYLE & LAYOUT RULES (1000x1500, 2:3 Ratio):
 - Luxury Editorial (West Elm, Studio McGee, CB2, Pottery Barn, Crate & Barrel, RH)

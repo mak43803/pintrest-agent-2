@@ -551,14 +551,22 @@ class PinterestAgent:
                 current_keyword = None
                 continue  # Retry research
                 
-            # Strict Anti-Book & Off-Niche Home Decor Filter
+            # Strict Anti-Book & Anti-Fashion Non-Home-Decor Filter
             if hasattr(product_details, "title") and product_details.title:
                 t_low = product_details.title.lower()
+                
+                # 1. Anti-Book Filter
                 book_terms = ["paperback", "hardcover", "mass market", "kindle edition", "novel", "pages", "author", "isbn", "publisher"]
                 decor_exceptions = ["vase", "holder", "box", "nook", "fake", "decorative", "display", "stand", "tray"]
                 is_real_book = any(b in t_low for b in book_terms) and not any(d in t_low for d in decor_exceptions)
-                if is_real_book:
-                    logger.warning("🚫 NON-DECOR REAL BOOK REJECTED: '%s'. Skipping to fresh home decor category...", product_details.title)
+                
+                # 2. Anti-Fashion & Non-Home-Decor Filter (NO shoes, charms, apparel, makeup, jewelry)
+                off_niche_terms = ["shoe", "sneaker", "sandal", "boot", "heel", "charm", "keychain", "croc", "clothing", "dress", "shirt", "pants", "skirt", "jacket", "makeup", "lipstick", "mascara", "foundation", "earring", "necklace", "bracelet", "purse", "handbag"]
+                home_exceptions = ["rack", "bench", "tree", "cabinet", "organizer", "tray", "box"]
+                is_off_niche = any(term in t_low for term in off_niche_terms) and not any(h in t_low for h in home_exceptions)
+
+                if is_real_book or is_off_niche:
+                    logger.warning("🚫 NON-HOME-DECOR ITEM REJECTED: '%s'. Skipping to fresh home decor category...", product_details.title)
                     past_products.append(selected_keyword)
                     current_keyword = None
                     continue
