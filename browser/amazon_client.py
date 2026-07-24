@@ -143,7 +143,7 @@ class AmazonClient:
                 if not url_str or not url_str.startswith("http"):
                     return False
                 u_low = url_str.lower()
-                invalid_terms = ["logo", "amazon", "icon", "banner", "sprite", "pixel", "x-locale", "common", "nav", "prime", "badge", "btn", "button", ".gif"]
+                invalid_terms = ["amazon_logo", "amazon-logo", "/logos/", "x-locale", "common/logos", "sprite", "pixel.gif", "transparent-pixel", "btn.png", "button"]
                 return not any(term in u_low for term in invalid_terms)
 
             image_url = ""
