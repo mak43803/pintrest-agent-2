@@ -546,7 +546,7 @@ class PinterestAgent:
             try:
                 product_details = await self.execute_task_with_memory("Amazon Sourcing", step_amazon_sourcing)
             except Exception as e:
-                logger.error(f"Amazon Sourcing failed for '%s': {e}", selected_keyword)
+                logger.error("Amazon Sourcing failed for '%s': %s", selected_keyword, str(e))
                 past_products.append(selected_keyword)
                 current_keyword = None
                 continue  # Retry research
