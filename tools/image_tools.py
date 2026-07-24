@@ -42,7 +42,11 @@ class ImageTools:
         filename = f"{uuid.uuid4().hex[:8]}.jpg"
         filepath = path / filename
         
-        logger.debug("Downloading image  │  url=%s", url[:50] + "...")
+        # Convert any Amazon thumbnail URL to 2000x2000 Full-HD original master photo
+        import re
+        url = re.sub(r'\._[A-Z0-9_,]+_\.', '.', url)
+        
+        logger.debug("Downloading HD image  │  url=%s", url[:50] + "...")
         response = requests.get(url, stream=True, timeout=15)
         response.raise_for_status()
         

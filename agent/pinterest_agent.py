@@ -799,52 +799,57 @@ class PinterestAgent:
                         ]
                         ctas = ["Shop storage on Amazon →", "Get organized today →", "Tap for shop link →", "Shop the organization edit →"]
 
-                    # 8. PET DECOR
+                    # 8. FASHION, SHOE & COQUETTE ACCESSORIES
+                    elif any(k in t_lower for k in ["shoe", "charm", "sneaker", "bow", "pearl", "jewelry", "keychain", "coquette", "ribbon", "clip", "bag charm"]):
+                        labels = [
+                            "AESTHETIC BOW FIND",
+                            "COQUETTE ACCESSORY",
+                            "VIRAL SHOE CHARM",
+                            "PEARL ACCENT FIND",
+                            "TRENDING BOW EDIT",
+                            "AESTHETIC ACCESSORY"
+                        ]
+                        headlines = [
+                            "Elevate Your Favorite Shoes Instantly",
+                            "The Cutest Coquette Bow Accessory",
+                            "Viral Aesthetic Shoe Charms Everyone Wants",
+                            "Make Your Sneakers Look Expensive",
+                            "The Aesthetic Pearl Bow Accessory"
+                        ]
+                        ctas = ["Shop bow charms →", "Get the coquette look →", "Tap to check Amazon price →"]
+
+                    # 9. PET DECOR
                     elif any(k in t_lower for k in ["pet", "cat", "dog", "scratcher", "litter box"]):
                         labels = ["AMAZON PET DECOR", "AESTHETIC PET FIND", "VIRAL PET FAV"]
                         headlines = ["Aesthetic Pet Decor That Fits Your Home", "Cute Pet Essentials Everyone Is Buying", "Make Your Pet Setup Look Premium"]
                         ctas = ["Shop pet find →", "Tap for Amazon link →", "Get the look →"]
 
-                    # 9. HOLIDAY & SEASONAL
+                    # 10. HOLIDAY & SEASONAL
                     elif any(k in t_lower for k in ["pumpkin", "halloween", "christmas", "ghost", "wreath", "garland", "festive"]):
                         labels = ["SEASONAL DECOR FIND", "HOLIDAY HOME FAV", "COZY FALL EDIT", "CHRISTMAS HOME FIND"]
                         headlines = ["The Most Aesthetic Seasonal Decor Find", "Transform Your Home For The Holidays", "Viral Seasonal Decor Everyone Wants"]
                         ctas = ["Shop holiday decor →", "Get the seasonal look →", "Tap for Amazon link →"]
 
-                    # 10. SECONDARY FALLBACK CHECK ON NICHE CONTEXT
-                    elif any(k in n_lower for k in ["lamp", "light", "lighting"]):
-                        labels = ["AMAZON LIGHTING FIND", "AESTHETIC ROOM GLOW"]
-                        headlines = ["The Aesthetic Lighting Upgrade You Need", "This Lamp Changes The Whole Room Vibe"]
-                        ctas = ["Shop this ambient find →", "Get the lighting look →"]
-                    elif any(k in n_lower for k in ["bed", "bedroom", "pillow"]):
-                        labels = ["AMAZON BEDROOM FIND", "COZY BEDDING EDIT"]
-                        headlines = ["The Cozy Bedroom Upgrade Everyone Wants", "Transform Your Bed into A Cozy Haven"]
-                        ctas = ["Shop bedroom finds →", "Get the cozy look →"]
-                    elif any(k in n_lower for k in ["kitchen", "coffee"]):
-                        labels = ["AMAZON KITCHEN FIND", "COFFEE BAR MUST-HAVE"]
-                        headlines = ["Amazon's Favorite Kitchen Find", "The Cozy Kitchen Upgrade Everyone Wants"]
-                        ctas = ["Shop the kitchen look →", "Tap for Amazon link →"]
-
-                    # 11. GENERAL HOME DECOR (FINAL FALLBACK)
+                    # 11. GENERAL HOME DECOR & ACCESSORIES (FINAL FALLBACK)
                     else:
                         labels = [
-                            "AMAZON HOME FIND",
-                            "COZY LIVING FAV",
-                            "LUXURY HOME EDIT",
+                            "AMAZON FAVORITE FIND",
+                            "AESTHETIC STYLE FAV",
+                            "LUXURY DECOR EDIT",
                             "AESTHETIC HOME FIND",
-                            "AMAZON DECOR FAV",
-                            "COZY HOME UPGRADE",
-                            "WEST ELM STYLE DUPE"
+                            "AMAZON TRENDING FAV",
+                            "COZY STYLE UPGRADE",
+                            "VIRAL AMAZON FIND"
                         ]
                         headlines = [
-                            "The Cozy Home Upgrade Everyone Wants",
-                            "Amazon's Favorite Home Decor Find",
-                            "Aesthetic Home Decor That Looks Expensive",
-                            "Small Home Upgrade Big Difference",
-                            "Luxury Home Finds Under Budget",
-                            "Make Your Home Look Like A Pinterest Board",
-                            "Cozy Living Starts Here",
-                            "The Best Amazon Home Decor Finds This Season"
+                            "The Aesthetic Upgrade Everyone Wants",
+                            "Amazon's Favorite Trending Find",
+                            "Aesthetic Accessories That Look Expensive",
+                            "Small Upgrade Big Difference",
+                            "Luxury Style Finds Under Budget",
+                            "Make Your Space Look Like A Pinterest Board",
+                            "Cozy Style Starts Here",
+                            "The Best Amazon Aesthetic Finds This Season"
                         ]
                         ctas = ["Shop the look →", "Get the look →", "See why everyone loves it →", "Tap to shop on Amazon →", "Discover the collection →"]
 

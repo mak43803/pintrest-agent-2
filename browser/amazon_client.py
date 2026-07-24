@@ -199,6 +199,11 @@ class AmazonClient:
 
             if not is_valid_product_image(image_url):
                 raise Exception(f"Failed to find valid Amazon product image URL on page: {url}")
+
+            # Convert thumbnail URL to 2000x2000 Full-HD master resolution
+            import re
+            image_url = re.sub(r'\._[A-Z0-9_,]+_\.', '.', image_url)
+
             affiliate_url = self.add_affiliate_tag(page.url, self.affiliate_tag)
             
             logger.info("Successfully extracted Amazon product  │  title=%s", title[:30])
