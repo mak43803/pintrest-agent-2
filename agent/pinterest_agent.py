@@ -990,8 +990,12 @@ class PinterestAgent:
                         (product_details.affiliate_url,)
                     )
             except Exception as e:
-                logger.error(f"Linktree addition failed: {e}")
-                return False
+                logger.warning(f"⚠️ Linktree addition skipped ({e}). Pin was successfully published to Pinterest: {pin_url}")
+                with self.db.connection() as conn:
+                    conn.execute(
+                        "UPDATE products SET status = 'Pinterest_Published' WHERE affiliate_link = ?",
+                        (product_details.affiliate_url,)
+                    )
             
             logger.info("🎉 SUCCESS! Pin published at: %s", pin_url)
 
