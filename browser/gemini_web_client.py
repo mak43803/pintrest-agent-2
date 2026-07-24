@@ -59,27 +59,33 @@ class GeminiWebClient:
             if image_path:
                 logger.debug("Uploading image to Gemini...")
                 try:
-                    add_btn = page.locator('button[aria-label="Upload & tools"], button[aria-label*="Upload image"], button[aria-label*="Add file"]').first
-                    if await add_btn.count() > 0:
-                        await add_btn.click()
-                        await page.wait_for_timeout(500)
-                        
-                        async with page.expect_file_chooser(timeout=5000) as fc_info:
-                            upload_btn = page.locator('[role="menuitem"]:has-text("Upload files"), [role="menuitem"]:has-text("Upload image")').first
-                            if await upload_btn.count() > 0:
-                                await upload_btn.click()
-                            else:
-                                await add_btn.click()
-                        
-                        file_chooser = await fc_info.value
-                        await file_chooser.set_files(image_path)
-                        
-                        try:
-                            await page.wait_for_selector('thumbnail-preview img, [class*="thumbnail" i], [class*="preview" i], [aria-label*="image" i]', timeout=15000)
-                        except Exception:
-                            logger.warning("Timed out waiting for image thumbnail preview to appear, proceeding anyway.")
+                    file_input = page.locator('input[type="file"]').first
+                    if await file_input.count() > 0:
+                        await file_input.set_input_files(image_path)
+                        logger.info("Successfully uploaded image directly to Gemini via file input.")
+                        await page.wait_for_timeout(2000)
                     else:
-                        logger.warning("Could not find image upload button on Gemini UI.")
+                        add_btn = page.locator('button[aria-label="Upload & tools"], button[aria-label*="Upload image"], button[aria-label*="Add file"]').first
+                        if await add_btn.count() > 0 and await add_btn.is_enabled():
+                            await add_btn.click()
+                            await page.wait_for_timeout(500)
+                            
+                            async with page.expect_file_chooser(timeout=3000) as fc_info:
+                                upload_btn = page.locator('[role="menuitem"]:has-text("Upload files"), [role="menuitem"]:has-text("Upload image")').first
+                                if await upload_btn.count() > 0:
+                                    await upload_btn.click(force=True, timeout=2000)
+                                else:
+                                    await add_btn.click()
+                            
+                            file_chooser = await fc_info.value
+                            await file_chooser.set_files(image_path)
+                            
+                            try:
+                                await page.wait_for_selector('thumbnail-preview img, [class*="thumbnail" i], [class*="preview" i], [aria-label*="image" i]', timeout=5000)
+                            except Exception:
+                                pass
+                        else:
+                            logger.warning("Could not find active image upload button on Gemini UI.")
                 except Exception as e:
                     logger.warning(f"Failed to upload image to Gemini: {e}")
 
