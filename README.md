@@ -1,7 +1,7 @@
-# 🤖 Pinterest AI Agent
+# 🤖 Pinterest AI Agent — Baddies Home Aesthetics
 
-> **Production-grade local AI application** for autonomous Pinterest automation,
-> powered by a local LLM (Ollama + Qwen3), Playwright browser automation, and SQLite persistence.
+> **Production-grade cloud-connected AI application** for autonomous Pinterest Affiliate Marketing automation,
+> powered by Google Gemini AI (Vision + SEO Generation), Playwright browser automation, and SQLite persistence.
 
 ---
 
@@ -10,9 +10,9 @@
 | Component        | Technology                     |
 |------------------|--------------------------------|
 | **Language**     | Python 3.12+                   |
-| **LLM**         | Ollama (Qwen 3)                |
+| **AI Engine**    | Google Gemini (Cloud Vision)   |
 | **Browser**      | Playwright (Chromium)          |
-| **Database**     | SQLite (via aiosqlite)         |
+| **Database**     | SQLite                         |
 | **Architecture** | Modular, OOP, Fully Async      |
 
 ---
