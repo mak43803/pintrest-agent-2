@@ -137,20 +137,32 @@ class AmazonClient:
                 description = f"Check out this amazing {title} on Amazon!"
                 
             # 3. Extract High-Res Image
-            # Amazon's main image locator
             image_url = ""
             try:
-                img_loc = page.locator("#landingImage, #imgBlkFront, #main-image").first
+                img_loc = page.locator("#landingImage, #imgBlkFront, #main-image, #imgTagWrapperId img, img.a-dynamic-image, img[src*='media-amazon.com']").first
                 if await img_loc.count() > 0:
-                    image_url = await img_loc.get_attribute("src", timeout=2000) or ""
-                    # Sometimes Amazon serves a base64 or small image in 'src' and high-res in 'data-old-hires'
                     hires = await img_loc.get_attribute("data-old-hires", timeout=1000)
-                    if hires:
+                    if hires and hires.startswith("http"):
                         image_url = hires
+                    else:
+                        src = await img_loc.get_attribute("src", timeout=2000) or ""
+                        if src and src.startswith("http"):
+                            image_url = src
+                        else:
+                            dyn = await img_loc.get_attribute("data-a-dynamic-image", timeout=1000)
+                            if dyn and "http" in dyn:
+                                import json
+                                try:
+                                    dyn_dict = json.loads(dyn)
+                                    if dyn_dict:
+                                        image_url = list(dyn_dict.keys())[-1]
+                                except Exception:
+                                    pass
             except Exception as e:
                 logger.warning(f"Could not extract Amazon image: {e}")
                 
-            # 4. Generate Affiliate Link
+            if not image_url or not image_url.startswith("http"):
+                raise Exception(f"Failed to find valid Amazon product image URL on page: {url}")
             affiliate_url = self.add_affiliate_tag(page.url, self.affiliate_tag)
             
             logger.info("Successfully extracted Amazon product  │  title=%s", title[:30])
