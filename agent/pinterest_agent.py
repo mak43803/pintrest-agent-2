@@ -342,18 +342,9 @@ class PinterestAgent:
         relevant_memories = [r for r in results if r.score >= 0.6 and r.metadata.get("type") == "failure"]
         
         if relevant_memories:
-            logger.info("Memory retrieved: Found %d relevant past failures/solutions.", len(relevant_memories))
-            for i, r in enumerate(relevant_memories):
-                sol = r.metadata.get("working_solution", "None recorded yet")
-                conf = r.metadata.get("confidence", 0.5)
-                logger.info(
-                    "  [%d] Match Score: %.2f | Failure: '%s' | Solution: '%s' | Confidence: %.2f",
-                    i + 1, r.score, r.content[:80], sol, conf
-                )
-                if conf >= 0.7 and sol != "None recorded yet":
-                    logger.info("Memory applied: Auto-applying solution/strategy based on high confidence score (%.2f).", conf)
+            logger.info("Memory Check: Auto-tuning execution for '%s' using %d past memory learnings.", task_name, len(relevant_memories))
         else:
-            logger.info("Memory retrieved: No relevant past issues found for this task.")
+            logger.info("Memory Check: No prior issues recorded for task '%s'.", task_name)
 
         # 2. EXECUTE THE TASK
         start_time = time.time()
