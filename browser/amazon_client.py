@@ -148,17 +148,18 @@ class AmazonClient:
 
             image_url = ""
             try:
-                # 1. Main landing image & gallery selectors
-                main_locators = page.locator("#landingImage, #imgBlkFront, #main-image, #imgTagWrapperId img, #altImages img, li.imageThumbnail img, #imageBlock img")
+                # 1. Primary main image locators
+                main_locators = page.locator("#landingImage, #imgBlkFront, #main-image, #imgTagWrapperId img, #altImages img, li.imageThumbnail img, #imageBlock img, img.a-dynamic-image")
                 count = await main_locators.count()
                 for idx in range(count):
                     loc = main_locators.nth(idx)
-                    hires = await loc.get_attribute("data-old-hires", timeout=1000)
+                    
+                    hires = await loc.get_attribute("data-old-hires", timeout=500)
                     if hires and is_valid_product_image(hires):
                         image_url = hires
                         break
                     
-                    dyn = await loc.get_attribute("data-a-dynamic-image", timeout=1000)
+                    dyn = await loc.get_attribute("data-a-dynamic-image", timeout=500)
                     if dyn and "http" in dyn:
                         import json
                         try:
@@ -172,29 +173,32 @@ class AmazonClient:
                         except Exception:
                             pass
 
-                    src = await loc.get_attribute("src", timeout=1000) or ""
+                    src = await loc.get_attribute("src", timeout=500) or ""
                     if is_valid_product_image(src):
                         image_url = src
                         break
             except Exception as e:
                 logger.warning(f"Could not extract Amazon main image: {e}")
 
-            # 2. Fallback scan across all media-amazon images on page
+            # 2. Ultimate Fallback scan across all image elements on page
             if not is_valid_product_image(image_url):
                 try:
-                    all_imgs = page.locator("img[src*='media-amazon.com/images/I/']")
+                    all_imgs = page.locator("img[src*='amazon'], img[src*='media']")
                     img_count = await all_imgs.count()
                     for idx in range(img_count):
-                        s = await all_imgs.nth(idx).get_attribute("src") or ""
-                        if is_valid_product_image(s):
-                            image_url = s
-                            logger.info("Extracted Amazon product image via media fallback: %s", image_url)
+                        loc = all_imgs.nth(idx)
+                        hires = await loc.get_attribute("data-old-hires", timeout=300)
+                        src = await loc.get_attribute("src", timeout=300) or ""
+                        target = hires if is_valid_product_image(hires) else src
+                        if is_valid_product_image(target):
+                            image_url = target
+                            logger.info("Extracted Amazon product image via ultimate fallback: %s", image_url)
                             break
                 except Exception as e:
-                    logger.warning(f"Media fallback image check failed: {e}")
+                    logger.warning(f"Ultimate fallback image check failed: {e}")
 
             if not is_valid_product_image(image_url):
-                raise Exception(f"Failed to find valid Amazon product image URL (rejected logos/icons) on page: {url}")
+                raise Exception(f"Failed to find valid Amazon product image URL on page: {url}")
             affiliate_url = self.add_affiliate_tag(page.url, self.affiliate_tag)
             
             logger.info("Successfully extracted Amazon product  │  title=%s", title[:30])
