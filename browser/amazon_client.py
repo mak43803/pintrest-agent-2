@@ -143,23 +143,24 @@ class AmazonClient:
                 if not url_str or not url_str.startswith("http"):
                     return False
                 u_low = url_str.lower()
-                invalid_terms = ["amazon_logo", "amazon-logo", "/logos/", "x-locale", "common/logos", "sprite", "pixel.gif", "transparent-pixel", "btn.png", "button"]
+                invalid_terms = ["amazon_logo", "amazon-logo", "/logos/", "x-locale", "common/logos", "sprite", "pixel.gif", "transparent-pixel", "btn.png", "button", "play-icon", "video"]
                 return not any(term in u_low for term in invalid_terms)
 
             image_url = ""
+
+            # Tier 1: Primary main image locators
             try:
-                # 1. Primary main image locators
                 main_locators = page.locator("#landingImage, #imgBlkFront, #main-image, #imgTagWrapperId img, #altImages img, li.imageThumbnail img, #imageBlock img, img.a-dynamic-image")
                 count = await main_locators.count()
                 for idx in range(count):
                     loc = main_locators.nth(idx)
                     
-                    hires = await loc.get_attribute("data-old-hires", timeout=500)
+                    hires = await loc.get_attribute("data-old-hires", timeout=300)
                     if hires and is_valid_product_image(hires):
                         image_url = hires
                         break
                     
-                    dyn = await loc.get_attribute("data-a-dynamic-image", timeout=500)
+                    dyn = await loc.get_attribute("data-a-dynamic-image", timeout=300)
                     if dyn and "http" in dyn:
                         import json
                         try:
@@ -173,29 +174,43 @@ class AmazonClient:
                         except Exception:
                             pass
 
-                    src = await loc.get_attribute("src", timeout=500) or ""
+                    src = await loc.get_attribute("src", timeout=300) or ""
                     if is_valid_product_image(src):
                         image_url = src
                         break
             except Exception as e:
-                logger.warning(f"Could not extract Amazon main image: {e}")
+                logger.debug("Tier 1 image check: %s", e)
 
-            # 2. Ultimate Fallback scan across all image elements on page
+            # Tier 2: Scan all <img> tags for hires/src
             if not is_valid_product_image(image_url):
                 try:
-                    all_imgs = page.locator("img[src*='amazon'], img[src*='media']")
+                    all_imgs = page.locator("img")
                     img_count = await all_imgs.count()
                     for idx in range(img_count):
                         loc = all_imgs.nth(idx)
-                        hires = await loc.get_attribute("data-old-hires", timeout=300)
-                        src = await loc.get_attribute("src", timeout=300) or ""
+                        hires = await loc.get_attribute("data-old-hires", timeout=200)
+                        src = await loc.get_attribute("src", timeout=200) or ""
                         target = hires if is_valid_product_image(hires) else src
                         if is_valid_product_image(target):
                             image_url = target
-                            logger.info("Extracted Amazon product image via ultimate fallback: %s", image_url)
+                            logger.info("Extracted Amazon product image via Tier 2 scan: %s", image_url[:60])
                             break
                 except Exception as e:
-                    logger.warning(f"Ultimate fallback image check failed: {e}")
+                    logger.debug("Tier 2 image check: %s", e)
+
+            # Tier 3: Regex match raw HTML source code for Amazon product image CDN URLs
+            if not is_valid_product_image(image_url):
+                try:
+                    raw_html = await page.content()
+                    import re
+                    matches = re.findall(r'https://[a-zA-Z0-9.-]*amazon[a-zA-Z0-9.-]*/images/[IS]/[a-zA-Z0-9%_\-\.\+]+\.(?:jpg|png|jpeg|webp)', raw_html, re.IGNORECASE)
+                    for m in matches:
+                        if is_valid_product_image(m):
+                            image_url = m
+                            logger.info("Extracted Amazon product image via Tier 3 HTML regex: %s", image_url[:60])
+                            break
+                except Exception as e:
+                    logger.debug("Tier 3 HTML regex check: %s", e)
 
             if not is_valid_product_image(image_url):
                 raise Exception(f"Failed to find valid Amazon product image URL on page: {url}")
