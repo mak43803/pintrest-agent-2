@@ -59,35 +59,40 @@ class GeminiWebClient:
             if image_path:
                 logger.debug("Uploading image to Gemini...")
                 try:
+                    # 1. Click upload/add button to reveal file input or menu
+                    add_btn = page.locator(
+                        'button[aria-label*="Upload" i], button[aria-label*="Add" i], button[aria-label*="Attach" i], '
+                        'button[aria-label*="file" i], button[aria-label*="tool" i], button[aria-label*="picker" i], '
+                        'button[aria-label*="plus" i], button[data-test-id*="upload" i], button.uploader-button'
+                    ).first
+                    
+                    if await add_btn.count() > 0:
+                        try:
+                            await add_btn.click(force=True, timeout=2500)
+                            await page.wait_for_timeout(500)
+                        except Exception:
+                            pass
+
+                    # 2. Check if input[type="file"] is now in DOM
                     file_input = page.locator('input[type="file"]').first
                     if await file_input.count() > 0:
                         await file_input.set_input_files(image_path)
-                        logger.info("Successfully uploaded image directly to Gemini via file input.")
+                        logger.info("Successfully uploaded image to Gemini via file input.")
                         await page.wait_for_timeout(2000)
                     else:
-                        add_btn = page.locator('button[aria-label="Upload & tools"], button[aria-label*="Upload image"], button[aria-label*="Add file"]').first
-                        if await add_btn.count() > 0 and await add_btn.is_enabled():
-                            await add_btn.click()
-                            await page.wait_for_timeout(500)
-                            
+                        # 3. Try clicking menu item for upload
+                        upload_menu = page.locator('[role="menuitem"]:has-text("Upload"), [role="menuitem"]:has-text("File"), [data-test-id*="uploader"]').first
+                        if await upload_menu.count() > 0:
                             async with page.expect_file_chooser(timeout=3000) as fc_info:
-                                upload_btn = page.locator('[role="menuitem"]:has-text("Upload files"), [role="menuitem"]:has-text("Upload image")').first
-                                if await upload_btn.count() > 0:
-                                    await upload_btn.click(force=True, timeout=2000)
-                                else:
-                                    await add_btn.click()
-                            
+                                await upload_menu.click(force=True, timeout=2000)
                             file_chooser = await fc_info.value
                             await file_chooser.set_files(image_path)
-                            
-                            try:
-                                await page.wait_for_selector('thumbnail-preview img, [class*="thumbnail" i], [class*="preview" i], [aria-label*="image" i]', timeout=5000)
-                            except Exception:
-                                pass
+                            logger.info("Successfully uploaded image to Gemini via file chooser.")
+                            await page.wait_for_timeout(2000)
                         else:
-                            logger.warning("Could not find active image upload button on Gemini UI.")
+                            logger.info("Skipped Gemini visual upload (SEO generating directly from product details).")
                 except Exception as e:
-                    logger.warning(f"Failed to upload image to Gemini: {e}")
+                    logger.debug("Gemini image upload note: %s", e)
 
             logger.debug("Typing prompt...")
             chat_locator = page.locator('rich-textarea, div[contenteditable="true"], [aria-label*="prompt"]').first
