@@ -123,6 +123,8 @@ class AmazonClient:
         
         try:
             await page.goto(url, wait_until="domcontentloaded", timeout=60000)
+            # Wait for Amazon lazy-loaded gallery JavaScript to populate main image
+            await page.wait_for_timeout(3500)
             
             # 1. Extract Title
             title_loc = page.locator("#productTitle").first
@@ -146,7 +148,7 @@ class AmazonClient:
                         image_url = hires
                     else:
                         src = await img_loc.get_attribute("src", timeout=2000) or ""
-                        if src and src.startswith("http"):
+                        if src and src.startswith("http") and not src.startswith("data:"):
                             image_url = src
                         else:
                             dyn = await img_loc.get_attribute("data-a-dynamic-image", timeout=1000)
@@ -160,7 +162,21 @@ class AmazonClient:
                                     pass
             except Exception as e:
                 logger.warning(f"Could not extract Amazon image: {e}")
-                
+
+            # Fallback check across all media-amazon gallery images on page
+            if not image_url or not image_url.startswith("http"):
+                try:
+                    all_imgs = page.locator("img[src*='media-amazon.com/images/I/']")
+                    img_count = await all_imgs.count()
+                    for idx in range(img_count):
+                        s = await all_imgs.nth(idx).get_attribute("src") or ""
+                        if s.startswith("http") and not s.endswith(".gif") and not s.startswith("data:"):
+                            image_url = s
+                            logger.info("Extracted Amazon image via media-amazon gallery fallback: %s", image_url)
+                            break
+                except Exception as e:
+                    logger.warning(f"Media fallback image check failed: {e}")
+
             if not image_url or not image_url.startswith("http"):
                 raise Exception(f"Failed to find valid Amazon product image URL on page: {url}")
             affiliate_url = self.add_affiliate_tag(page.url, self.affiliate_tag)
