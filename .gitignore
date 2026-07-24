@@ -1,0 +1,53 @@
+# ── Runtime ─────────────────────────────────
+.env
+*.db
+*.db-journal
+*.db-wal
+
+# ── Python ─────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+
+# ── Virtual Environment ────────────────────
+venv/
+.venv/
+env/
+
+# ── IDE ────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ── OS ─────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Logs & Downloads ──────────────────────
+logs/*.log
+downloads/*
+images/*
+!logs/.gitkeep
+!downloads/.gitkeep
+!images/.gitkeep
+
+# ── Testing ────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# ── Browser State ──────────────────────────
+browser_state/
+browser_session/
+storage_state.json
+scratch/
