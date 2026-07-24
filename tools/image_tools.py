@@ -95,13 +95,22 @@ class ImageTools:
         SHADOW_COLOR = (210, 205, 198, 120)  # Subtle realistic drop shadow
 
         def get_serif_font(size=38, bold=True):
-            """Safely retrieve Windows Georgia / Times New Roman serif fonts."""
+            """Safely retrieve Windows, Linux, and macOS Serif fonts with exact sizing."""
             windir = os.environ.get("WINDIR", "C:\\Windows")
             font_candidates = [
+                # Windows
                 os.path.join(windir, "Fonts", "georgiab.ttf" if bold else "georgia.ttf"),
                 os.path.join(windir, "Fonts", "georgia.ttf"),
                 os.path.join(windir, "Fonts", "timesbd.ttf" if bold else "times.ttf"),
                 os.path.join(windir, "Fonts", "times.ttf"),
+                # Linux (Ubuntu / Debian)
+                "/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf" if bold else "/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf",
+                "/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf",
+                "/usr/share/fonts/truetype/liberation/LiberationSerif-Bold.ttf" if bold else "/usr/share/fonts/truetype/liberation/LiberationSerif-Regular.ttf",
+                "/usr/share/fonts/truetype/freefont/FreeSerifBold.ttf" if bold else "/usr/share/fonts/truetype/freefont/FreeSerif.ttf",
+                # macOS
+                "/Library/Fonts/Georgia.ttf",
+                "/System/Library/Fonts/Times.ttc"
             ]
             for font_path in font_candidates:
                 if os.path.exists(font_path):
@@ -109,16 +118,28 @@ class ImageTools:
                         return ImageFont.truetype(font_path, size)
                     except Exception:
                         pass
-            return ImageFont.load_default()
+            try:
+                return ImageFont.load_default(size=size)
+            except Exception:
+                return ImageFont.load_default()
 
         def get_sans_font(size=22, bold=False):
-            """Safely retrieve Windows Segoe UI / Arial sans-serif fonts."""
+            """Safely retrieve Windows, Linux, and macOS Sans-Serif fonts with exact sizing."""
             windir = os.environ.get("WINDIR", "C:\\Windows")
             font_candidates = [
-                os.path.join(windir, "Fonts", "segoeui.ttf"),
+                # Windows
                 os.path.join(windir, "Fonts", "segoeuib.ttf" if bold else "segoeui.ttf"),
-                os.path.join(windir, "Fonts", "arial.ttf"),
+                os.path.join(windir, "Fonts", "segoeui.ttf"),
                 os.path.join(windir, "Fonts", "arialbd.ttf" if bold else "arial.ttf"),
+                os.path.join(windir, "Fonts", "arial.ttf"),
+                # Linux (Ubuntu / Debian)
+                "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" if bold else "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+                "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+                "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf" if bold else "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+                "/usr/share/fonts/truetype/freefont/FreeSansBold.ttf" if bold else "/usr/share/fonts/truetype/freefont/FreeSans.ttf",
+                # macOS
+                "/Library/Fonts/Arial.ttf",
+                "/System/Library/Fonts/Helvetica.ttc"
             ]
             for font_path in font_candidates:
                 if os.path.exists(font_path):
@@ -126,7 +147,10 @@ class ImageTools:
                         return ImageFont.truetype(font_path, size)
                     except Exception:
                         pass
-            return ImageFont.load_default()
+            try:
+                return ImageFont.load_default(size=size)
+            except Exception:
+                return ImageFont.load_default()
 
         def wrap_text(text, font, max_width, draw_ctx):
             """Word-wrap helper using Pillow textbbox metrics."""
