@@ -138,47 +138,63 @@ class AmazonClient:
             if not description:
                 description = f"Check out this amazing {title} on Amazon!"
                 
-            # 3. Extract High-Res Image
+            # 3. Extract High-Res Image (Strictly filtering out Amazon logos/icons/UI elements)
+            def is_valid_product_image(url_str: str) -> bool:
+                if not url_str or not url_str.startswith("http"):
+                    return False
+                u_low = url_str.lower()
+                invalid_terms = ["logo", "amazon", "icon", "banner", "sprite", "pixel", "x-locale", "common", "nav", "prime", "badge", "btn", "button", ".gif"]
+                return not any(term in u_low for term in invalid_terms)
+
             image_url = ""
             try:
-                img_loc = page.locator("#landingImage, #imgBlkFront, #main-image, #imgTagWrapperId img, img.a-dynamic-image, img[src*='media-amazon.com']").first
-                if await img_loc.count() > 0:
-                    hires = await img_loc.get_attribute("data-old-hires", timeout=1000)
-                    if hires and hires.startswith("http"):
+                # 1. Main landing image & gallery selectors
+                main_locators = page.locator("#landingImage, #imgBlkFront, #main-image, #imgTagWrapperId img, #altImages img, li.imageThumbnail img, #imageBlock img")
+                count = await main_locators.count()
+                for idx in range(count):
+                    loc = main_locators.nth(idx)
+                    hires = await loc.get_attribute("data-old-hires", timeout=1000)
+                    if hires and is_valid_product_image(hires):
                         image_url = hires
-                    else:
-                        src = await img_loc.get_attribute("src", timeout=2000) or ""
-                        if src and src.startswith("http") and not src.startswith("data:"):
-                            image_url = src
-                        else:
-                            dyn = await img_loc.get_attribute("data-a-dynamic-image", timeout=1000)
-                            if dyn and "http" in dyn:
-                                import json
-                                try:
-                                    dyn_dict = json.loads(dyn)
-                                    if dyn_dict:
-                                        image_url = list(dyn_dict.keys())[-1]
-                                except Exception:
-                                    pass
-            except Exception as e:
-                logger.warning(f"Could not extract Amazon image: {e}")
+                        break
+                    
+                    dyn = await loc.get_attribute("data-a-dynamic-image", timeout=1000)
+                    if dyn and "http" in dyn:
+                        import json
+                        try:
+                            dyn_dict = json.loads(dyn)
+                            for k in reversed(list(dyn_dict.keys())):
+                                if is_valid_product_image(k):
+                                    image_url = k
+                                    break
+                            if image_url:
+                                break
+                        except Exception:
+                            pass
 
-            # Fallback check across all media-amazon gallery images on page
-            if not image_url or not image_url.startswith("http"):
+                    src = await loc.get_attribute("src", timeout=1000) or ""
+                    if is_valid_product_image(src):
+                        image_url = src
+                        break
+            except Exception as e:
+                logger.warning(f"Could not extract Amazon main image: {e}")
+
+            # 2. Fallback scan across all media-amazon images on page
+            if not is_valid_product_image(image_url):
                 try:
                     all_imgs = page.locator("img[src*='media-amazon.com/images/I/']")
                     img_count = await all_imgs.count()
                     for idx in range(img_count):
                         s = await all_imgs.nth(idx).get_attribute("src") or ""
-                        if s.startswith("http") and not s.endswith(".gif") and not s.startswith("data:"):
+                        if is_valid_product_image(s):
                             image_url = s
-                            logger.info("Extracted Amazon image via media-amazon gallery fallback: %s", image_url)
+                            logger.info("Extracted Amazon product image via media fallback: %s", image_url)
                             break
                 except Exception as e:
                     logger.warning(f"Media fallback image check failed: {e}")
 
-            if not image_url or not image_url.startswith("http"):
-                raise Exception(f"Failed to find valid Amazon product image URL on page: {url}")
+            if not is_valid_product_image(image_url):
+                raise Exception(f"Failed to find valid Amazon product image URL (rejected logos/icons) on page: {url}")
             affiliate_url = self.add_affiliate_tag(page.url, self.affiliate_tag)
             
             logger.info("Successfully extracted Amazon product  │  title=%s", title[:30])
