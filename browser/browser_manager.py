@@ -110,13 +110,12 @@ class BrowserManager:
             # When running headfully, use system Chrome (channel="chrome") so the user can easily log in.
             channel = None if self._settings.headless else "chrome"
             
-            self._context = await self._playwright.chromium.launch_persistent_context(
-                user_data_dir=user_data_dir,
-                channel=channel,
-                headless=self._settings.headless,
-                slow_mo=self._settings.slow_mo,
-                ignore_default_args=["--enable-automation"],
-                args=[
+            launch_args = {
+                "user_data_dir": user_data_dir,
+                "headless": self._settings.headless,
+                "slow_mo": self._settings.slow_mo,
+                "ignore_default_args": ["--enable-automation"],
+                "args": [
                     "--disable-blink-features=AutomationControlled",
                     "--disable-infobars",
                     "--no-sandbox",
@@ -124,8 +123,23 @@ class BrowserManager:
                     "--disable-dev-shm-usage",
                     "--password-store=basic",
                 ],
-                no_viewport=False,
-            )
+                "no_viewport": False,
+            }
+
+            try:
+                self._context = await self._playwright.chromium.launch_persistent_context(
+                    channel=channel,
+                    **launch_args
+                )
+            except Exception as launch_exc:
+                if channel == "chrome":
+                    logger.warning("System Chrome launch failed (%s). Falling back to Playwright Chromium...", launch_exc)
+                    self._context = await self._playwright.chromium.launch_persistent_context(
+                        channel=None,
+                        **launch_args
+                    )
+                else:
+                    raise
             self._browser = None  # No separate browser object for persistent context
 
             # Apply JS stealth evasions
