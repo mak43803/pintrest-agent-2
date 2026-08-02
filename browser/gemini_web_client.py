@@ -185,32 +185,37 @@ CRITICAL RULES:
             "Aesthetic Home Bar Setup", "Fall Season Room Vibe", "Aesthetic Desk Decor"
         ]
         prompt = f"""
-You are the Chief SEO & Creative Director for "Baddies Home Aesthetics" — a luxury home decor publication targeting women in the USA, UK, Canada, Australia (ages 24–55). Write in an elegant, high-converting editorial tone.
+You are the Chief SEO & Creative Director for "Baddies Home Aesthetics" — a luxury home decor publication targeting women in the USA 🇺🇸, UK 🇬🇧, and Canada 🇨🇦 (ages 24–55). Write in an elegant, high-converting Architectural Digest editorial tone.
+
+STRICT GEOGRAPHIC ROUTING RULE (USA 🇺🇸, UK 🇬🇧, CANADA 🇨🇦 ONLY):
+1. Target 100% of content strictly for female home decor shoppers in the United States 🇺🇸, United Kingdom 🇬🇧, and Canada 🇨🇦.
+2. In Title, Description, Alt-Text, and Tags, explicitly embed Western geographic search terms (e.g., "Amazon US", "Sephora & Architectural Digest USA 2026", "UK Home Decor", "Shoppers CA Favorites", "Cozy Aesthetic Room USA").
+3. STRICT EXCLUSION: Explicitly exclude India, South Korea, Asia, and non-Western regions. Route 100% of Pinterest impressions, indexing, and feed distributions exclusively to USA, UK, and Canada users!
 
 Input variables:
 Product Title: {product_title}
 Product Description: {product_desc}
 Allowed Boards: {", ".join(allowed_boards)}
 
-Return ONLY a single valid JSON object with keys "title", "description", "alt_text", "tags", "board" and nothing else. Follow all hard constraints below exactly; if any constraint cannot be met, return {{"error":"<concise failure reason>"}}.
+Return ONLY a single valid JSON object with keys "title", "description", "alt_text", "tags", "board" and nothing else. Follow all hard constraints below exactly.
 
 VIRAL PINTEREST 1M IMPRESSIONS SEO CONSTRAINTS:
-1. HIGH-INTENT SEARCH TITLE (70-80 CHARACTERS EXACTLY): Combine [Emotional Hook/Problem Solver] + [Exact Product Keyword] + [Category Keyword] + [Style/Year 2026]. Must include high-volume search terms like "Aesthetic", "Cozy", "Viral", "Finds", "Ideas" so the Pin ranks #1 whenever users search for this product on Pinterest.
-2. VIRAL PINTEREST LENS ALT TEXT (350–400 CHARACTERS - MAXIMUM VISUAL SEARCH SEO): Alt text MUST be a rich 350 to 400 character visual description (under Pinterest's 500 character limit). Detail exact product texture, materials, color palette, room setup, lighting style, aesthetic theme (Japandi, Hygge, Minimalist, Boho), and high-converting search keywords for Pinterest Visual Lens AI (e.g., "High quality visual product shot of a minimal sunset projection lamp casting a warm amber glow against a warm white wall; styled on a clean oak wood desk beside coffee table books and a ceramic matcha cup; natural ambient sunlight mixing with soft lamp lighting; editorial Pinterest home decor aesthetics USA UK Canada.").
-3. 1M IMPRESSIONS VIRAL DESCRIPTION COPYWRITING (350–400 CHARACTERS MAX):
+1. HIGH-INTENT SEARCH TITLE (STRICTLY 60 TO 80 CHARACTERS MAXIMUM): Combine [Price/Dupe Hook (e.g. The $24 Amazon Wavy Mirror...)] + [Exact Product Keyword] + [Category Keyword] + [Style/Year 2026]. Must include high-volume search terms like "Aesthetic", "Cozy", "Viral", "Amazon Home Finds", "Room Inspo" so the Pin ranks #1 whenever users search on Pinterest. (Example: "The $24 Amazon Wavy Mirror For A Cozy Japandi Bedroom — Room Inspo 2026")
+2. VIRAL PINTEREST LENS ALT TEXT (400–450 CHARACTERS - MAXIMUM VISUAL SEARCH SEO): Alt text MUST be a rich 400 to 450 character visual description. Detail exact product texture, materials, color palette, room setup, lighting style, aesthetic theme (Japandi, Hygge, Minimalist, Boho), and high-converting search keywords for Pinterest Visual Lens AI (e.g., "High quality editorial product photograph featuring {product_title} elegantly styled in a warm cozy room setting with natural ambient lighting, soft studio shadows, champagne travertine, and clean minimal Japandi aesthetic room decor details, optimized for Pinterest Visual Search indexing in USA UK Canada.").
+3. 1M IMPRESSIONS VIRAL DESCRIPTION COPYWRITING (400–450 CHARACTERS MAX):
    - Sentence 1 (Emotional Curiosity Hook): Write a high-converting emotional hook highlighting the instant room transformation benefit.
-   - Sentence 2 (Keyword Density & Search Intent): Naturally blend 5 to 7 high-volume long-tail search keywords relevant to the product and category (e.g. "Perfect for small apartment decor, aesthetic room refresh, cozy bedroom lighting, and viral Amazon finds USA UK Canada.").
-   - Sentence 3 (High-CTR Outbound Call-To-Action): Clear instruction to buy (*"Tap the image or click the link below to shop on Amazon today! 🛒 Save this pin! 💾"*).
-   - Sentence 4 (Hashtag Stack): 6 to 8 trending high-volume hashtags (*#AmazonHome #AestheticRoom #CozyLiving #JapandiDecor #RoomInspo #TikTokRoom #HomeFinds*).
+   - Sentence 2 (Keyword Density & Search Intent): Blend high-volume search keywords (e.g. "Looking for the best aesthetic room decor, cozy bedroom lighting, and viral Amazon home finds for small apartment setup?").
+   - Sentence 3 (High-CTR Outbound Call-To-Action): Clear instruction ("Shop on Amazon").
+   - Sentence 4 (Hashtag Stack): 5 trending high-volume hashtags (e.g., "#AmazonHome #AestheticRoom #CozyLiving #JapandiDecor #HomeFinds2026"). End with "💾 Save this pin!" as the last line.
 4. STRICT PRODUCT & BOARD MATCHING: Select the board from `Allowed Boards` that MOST DIRECTLY matches the product's exact category or room context.
 
 Output JSON Format Example:
 {{
-  "title": "Aesthetic Sunset Lamp for Cozy Japandi Bedroom Ideas & Mood Decor 2026",
-  "description": "Transform your room into a warm cozy sanctuary with this viral dimmable sunset lamp! Ideal for reading nooks, aesthetic desk setups, small bedroom decor, mood lighting, and luxury apartment upgrades. Tap the link below to shop this exact viral find on Amazon today! 🛒 Save this pin to your mood board! 💾 #SunsetLamp #AestheticRoom #CozyBedroom #JapandiDecor #RoomInspo #TikTokRoom #AmazonHomeFinds",
-  "alt_text": "High quality visual product shot of a minimal sunset projection lamp casting a warm amber golden glow against a clean white wall; styled on a clean Japandi wooden desk beside coffee table books and a ceramic matcha cup; natural ambient sunlight mixing with warm lamp glow; editorial Pinterest aesthetic home decor styling targeting USA UK Canada.",
-  "tags": "sunset lamp,aesthetic room decor,cozy bedroom lighting,japandi decor,led room lights,tiktok room trends,amazon home finds,minimalist desk setup,mood lighting,room inspo",
-  "board": "Sunset Lamp Aesthetic"
+  "title": "The $24 Amazon Wavy Mirror For A Cozy Japandi Bedroom — Room Inspo 2026",
+  "description": "Transform your room into a warm cozy sanctuary with this viral aesthetic wavy wall mirror! Ideal for small apartment decor, reading nooks, aesthetic vanity setups, and luxury bedroom upgrades. Shop on Amazon. #AmazonHome #AestheticRoom #CozyLiving #JapandiDecor #HomeFinds2026 💾 Save this pin!",
+  "alt_text": "High quality visual product shot of a minimal wavy wall mirror with a warm golden frame; styled on a clean Japandi wooden desk beside coffee table books and a ceramic vase; natural ambient sunlight mixing with soft shadows; editorial Architectural Digest aesthetic home decor styling targeting USA UK Canada.",
+  "tags": "wavy mirror,aesthetic room decor,cozy bedroom lighting,japandi decor,room mirrors,tiktok room trends,amazon home finds,minimalist desk setup,wall decor,room inspo",
+  "board": "Aesthetic Mirrors"
 }}
 """
         response_text = await self._send_prompt(prompt, image_path=image_path)
@@ -284,21 +289,167 @@ Output JSON Format Example:
 PINTEREST SHOPPING TRENDS NAVIGATION
 ###############################################################
 
-PRODUCT PRIORITIZATION RULES (CRITICAL FOR FAST SALES IN US/UK/CANADA):
-- 100% Priority: HIGH-CONVERSION, TRENDING IMPULSE BUYS FOR WOMEN. You must ONLY select products that are highly viral and likely to sell quickly.
+PRODUCT PRIORITIZATION RULES (100% STRICT HOME DECOR ONLY):
+- 100% STRICT RULE: HOME DECOR, INTERIOR DESIGN, FURNITURE, LIGHTING & ORGANIZATION PRODUCTS ONLY.
+- NEVER suggest beauty products, makeup, skincare, lip oils, perfumes, fashion, clothes, or books under any circumstances.
+
+---------------------------------------------------------------
+VIRAL AMAZON US, UK & CANADA HOME DECOR BESTSELLERS REFERENCE:
+---------------------------------------------------------------
+Choose dynamically from these #1 Amazon US Bestseller categories and items:
+- 💡 High-Commission Lighting & Ambiance:
+  * Dimmable Sunset Projection Lamp (Amber Glow)
+  * Vintage Dimmable Candle Warmer Lamp
+  * Mid-Century Mushroom Table Lamp
+  * 3D Moon Desk Lamp & Star Projector Galaxy Light
+  * Fairy String Curtain Lights with Remote
+  * LED Under Cabinet Sensor Strip Lighting
+- 🎓 US College Dorm & Apartment Essentials (HIGH IMPULSE US FEMALE BUYERS):
+  * Aesthetic Photo Wall Collage Prints Kit
+  * Checkered Y2K Throw Blanket & Area Rug
+  * Arch Floor Standing Lamp with Pleated Shade
+  * Clear Acrylic Floating Bookshelves Set
+  * Full Length Standing LED Floor Mirror
+  * Clear Acrylic Magnetic Fridge Dry Erase Calendar
+- 🎀 Coquette & Clean Girl Room Aesthetic Trends:
+  * Scalloped Frame Decorative Wall Mirror
+  * Bow Ribbon Brass Wall Hooks
+  * Fluted Glass Coffee Mugs Set with Glass Straws
+  * Ribbed Pillar Scented Soy Candles Set
+  * Cloud Shaped Tufted Pillow & Plush Accent Mat
+- 🪞 Mirrors & Wall Aesthetics:
+  * Wavy Irregular Wall Mirror (Frameless Aesthetic)
+  * Full Length Arched Gold Metal Frame Mirror
+  * Minimalist Line Art Canvas Prints Set (Gallery Wall)
+  * Botanical Olive Branch Framed Canvas Prints
+  * Boho Macrame Woven Wall Hanging Tapestry
+- 🛋️ Furniture & Room Accents:
+  * Walnut Wood Floating Entryway Console Table
+  * Minimalist Floating Wall Shelves (Set of 3)
+  * Bouclé Ergonomic Swivel Accent Chair
+  * Velvet Round Storage Ottoman Pouf
+  * Dark Espresso Wood Coffee Table Tray
+- 🛌 Bedding & Cozy Textiles:
+  * Chunky Cable Knit Throw Blanket (Neutral Ivory)
+  * 100% Washed Linen Duvet Cover Set
+  * Silk Satin Pillowcase Set for Hair & Skin
+  * Boho Tufted Textured Throw Pillow Covers Set
+  * Faux Sheepskin Fur Rug Runner
+- ☕ Kitchen, Coffee Bar & Pantry Setup:
+  * Bamboo Spice Jar Set with Minimalist Labels
+  * Clear Glass Coffee Syrup Dispenser Set with Gold Pumps & Labels
+  * Amber Glass Soap Dispenser Bottles Set with Pump
+  * Ribbed Fluted Glass Drinking Cups Set with Straws
+  * Nespresso Pod Acrylic Organizer Holder
+- 🛁 Bathroom & Organization:
+  * Bamboo Bathtub Tray Caddy
+  * Real Marble Vanity Tray with Gold Handles
+  * Clear Acrylic Cosmetics & Skincare Organizer
+  * Under Sink Sliding Organizer Drawers Set
 
 {trends_str}
 {past_str}
 
-Return only ONE final product per research cycle. Give me EXACTLY ONE highly specific, trending product search term that I should type into Amazon.
-Do not give me a list. Do not use quotes. Just the raw search term.
+CRITICAL FORMAT REQUIREMENTS:
+- Return ONLY a single concrete physical home decor product name on line 1 (3 to 6 words max, e.g. "Minimalist Walnut Wood Floating Shelves").
+- NEVER output design aesthetics (e.g. "Design Aesthetic Mid Century Modern", "Soft Minimalist"), section headers ("Product Focus", "Trend Alert"), or meta text.
+- STRICTLY FORBIDDEN: NO section headers, NO emojis, NO markdown, NO meta-text like "Product Specifications", "Trend Alert", "Strategy Blueprint", "Features", "Product Focus", "Design Aesthetic", or "Product Recommendation".
+- DO NOT write any introduction or explanation. Output NOTHING except the raw physical product search query.
+
 Example: Aesthetic Wavy Wall Mirror
 """
         response = await self._send_prompt(prompt)
         
+        import random
+        import re
+        fallback_decor = [
+            "Aesthetic Sunset Projection Lamp",
+            "Aesthetic Wavy Wall Mirror",
+            "Mushroom Table Lamp",
+            "Candle Warmer Lamp Vintage",
+            "Chunky Knit Blanket Throw",
+            "Bamboo Spice Jar Organizer Set",
+            "Clear Acrylic Makeup Vanity Organizer",
+            "Amber Glass Soap Dispenser Bottle Set",
+            "Donut Ceramic Vase for Pampas Grass",
+            "Fairy String Curtain Lights",
+            "Checkered Tufted Area Rug",
+            "Flame Air Diffuser Essential Oil Humidifier",
+            "Pure Washed Linen Duvet Cover Set",
+            "Walnut Wood Floating Wall Shelves",
+            "Clear Glass Coffee Syrup Dispenser Set",
+            "Full Length Arched Gold Metal Frame Mirror",
+            "Acacia Wood Cutting Board Cheese Board",
+            "Wabi Sabi Ceramic Decorative Flower Vase",
+            "Cordless Rechargeable Crystal Touch Table Lamp",
+            "Acrylic Pantry Bins Storage Containers"
+        ]
+
         if response:
-            return response.strip().replace('"', "")
-        return niche
+            lines = [l.strip().replace('"', '').replace('*', '').replace('`', '') for l in response.strip().split('\n') if l.strip()]
+            meta_words = {
+                "specification", "specifications", "features", "blueprint", "strategy", 
+                "alert", "trend", "trends", "overview", "curated", "breakdown", "analysis", 
+                "recommendation", "guide", "details", "ambiance", "category", "focus", 
+                "placement", "ideas", "design aesthetic", "product focus", "styling placement",
+                "featured home decor product pick"
+            }
+            physical_nouns = {
+                "lamp", "light", "lights", "mirror", "tray", "rug", "shelves", "shelf", "table", 
+                "chair", "vase", "blanket", "curtain", "organizer", "caddy", "clock", "sculpture", 
+                "art", "pillow", "frame", "lighter", "holder", "box", "basket", "diffuser", 
+                "dispenser", "board", "mat", "hook", "creations", "trunk", "mugs", "mug", "cups", 
+                "cup", "pots", "pot", "pan", "kitchenware", "organizers", "drawers", "drawer", 
+                "planter", "bedding", "duvet", "sheets", "towel", "rack", "bench", "ottoman", 
+                "pouf", "tapestry", "prints", "print", "candle", "candles", "warmer", "projector", 
+                "stand", "cabinet", "benches", "desk", "sofa", "couch", "bookend", "bookends", "planters"
+            }
+            
+            for l in lines:
+                l_clean = re.sub(r'[\U00010000-\U0010ffff\u2600-\u27ff\u2b00-\u2bff\u2300-\u23ff\u2000-\u206f\u2700-\u27bf]', '', l)
+                l_clean = re.sub(r'^\s*[%#\-\*\•\d\.\)]+\s*', '', l_clean).strip()
+                for prefix in [
+                    "Design Aesthetic:", "Design:", "Category:", "Product Focus:", "Product:", 
+                    "Keyword:", "Selected product keyword:", "Recommended:", "Selected:", 
+                    "Option:", "Feature:", "Trend:", "Style:", "Pick:", "Featured Home Decor Product Pick:"
+                ]:
+                    if l_clean.lower().startswith(prefix.lower()):
+                        l_clean = l_clean[len(prefix):].strip()
+                
+                # Fix unclosed parentheses
+                if l_clean.count('(') > l_clean.count(')'):
+                    l_clean = l_clean.replace('(', ' ')
+                elif l_clean.count(')') > l_clean.count('('):
+                    l_clean = l_clean.replace(')', ' ')
+                
+                l_clean = re.sub(r'[/\\:&%\(\)\[\]"\'`]+', ' ', l_clean)
+                l_clean = re.sub(r'\s+', ' ', l_clean).strip()
+
+                # Clean trailing noise words
+                words = l_clean.split()
+                while words and words[-1].lower() in {"with", "for", "and", "or", "in", "by", "of", "set", "design", "style", "ideas", "focus", "aesthetic"}:
+                    words.pop()
+                l_clean = " ".join(words).strip()
+                l_lower = l_clean.lower()
+
+                if not l_clean or l_clean.startswith("#") or "why this" in l_lower or "trending home decor" in l_lower or "recommended home decor" in l_lower or l_lower.startswith("category"):
+                    continue
+                if any(w in l_lower for w in meta_words) or "/" in l or "%" in l:
+                    continue
+                    
+                # Ensure candidate contains a physical product noun
+                has_noun = any(w.lower() in physical_nouns for w in l_clean.split())
+                if not has_noun:
+                    continue
+                    
+                if len(l_clean) >= 8 and len(l_clean) <= 65 and len(l_clean.split()) >= 2:
+                    return l_clean
+
+        past_set = set(p.lower().strip() for p in (past_products or []))
+        valid_fallbacks = [f for f in fallback_decor if f.lower().strip() not in past_set]
+        if valid_fallbacks:
+            return random.choice(valid_fallbacks)
+        return random.choice(fallback_decor)
 
     async def detect_viral_trend_bypass(self, trends_list: str, allowed_categories: list[str]) -> dict[str, Any] | None:
         """

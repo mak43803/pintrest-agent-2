@@ -3,6 +3,7 @@
 *.db
 *.db-journal
 *.db-wal
+*.db-shm
 
 # ── Python ─────────────────────────────────
 __pycache__/
@@ -33,6 +34,7 @@ desktop.ini
 
 # ── Logs & Downloads ──────────────────────
 logs/*.log
+logs/*.png
 downloads/*
 images/*
 !logs/.gitkeep
@@ -51,3 +53,5 @@ browser_state/
 browser_session/
 storage_state.json
 scratch/
+pintrest agent 2/
+

@@ -145,6 +145,29 @@ def get_next_category_based_on_analytics(db, categories: list[str]) -> str:
     """
     import random
     
+    # Priority US, UK & Canada Viral Home Decor Bestsellers (60% Weight)
+    viral_home_decor_priority = [
+        "Aesthetic Sunset Projection Lamp",
+        "Aesthetic Wavy Wall Mirror",
+        "Mushroom Table Lamp",
+        "Candle Warmer Lamp Vintage",
+        "Chunky Knit Blanket Throw",
+        "Bamboo Spice Jar Organizer Set",
+        "Clear Acrylic Makeup & Skincare Vanity Organizer",
+        "Amber Glass Soap Dispenser Bottle Set",
+        "Donut Ceramic Vase for Pampas Grass",
+        "Fairy String Curtain Lights",
+        "Checkered Tufted Area Rug",
+        "Flame Air Diffuser Essential Oil Humidifier",
+        "Pure Washed Linen Duvet Cover Set",
+        "Walnut Wood Floating Wall Shelves"
+    ]
+
+    if random.random() < 0.60:
+        chosen_viral = random.choice(viral_home_decor_priority)
+        logger.info("🏆 US/UK/CA Viral Home Decor Priority Mode: Selected '%s'", chosen_viral)
+        return chosen_viral
+
     # Identify recent 10 posted categories to prevent immediate back-to-back repeats
     recent_posted = set()
     posted_cats = set()
@@ -273,7 +296,7 @@ async def main() -> None:
                         logger.error("Internet not restored after 60 min. Stopping agent.")
                         break
 
-                # 1. Count total pins published today (for logging/analytics, no limit enforced)
+                # 1. Count total pins published today and overall campaign progress (60-day target: 2,400 pins / 40 per day)
                 with agent.db.connection() as conn:
                     cursor = conn.execute(
                         "SELECT COUNT(*) as cnt FROM products WHERE date(created_at) = date('now')"
@@ -281,7 +304,14 @@ async def main() -> None:
                     row = cursor.fetchone()
                     today_count = row["cnt"] if row else 0
                     
-                logger.info("Daily Posting Status: %d Pins published today (No Daily Limit).", today_count)
+                    cursor_total = conn.execute(
+                        "SELECT COUNT(*) as cnt FROM products"
+                    )
+                    row_total = cursor_total.fetchone()
+                    total_count = row_total["cnt"] if row_total else 0
+                    
+                TOTAL_CAMPAIGN_DAYS = 90
+                logger.info("🚀 90-Day Non-Stop Campaign Progress: %d Pins published today | Total Campaign Pins: %d", today_count, total_count)
                     
                 categories = [
                     # ── 🔥 TIER 1: FASTEST SELLERS (Impulse Buys Under $25) ──
@@ -726,10 +756,10 @@ async def main() -> None:
                     await asyncio.sleep(300)
                     continue
                     
-                # 3. Schedule next pin with a random interval between 40 and 45 minutes
-                # Posts ~30 to 34 high-quality pins per day with human random jitter.
-                interval_mins = random.randint(40, 45)
-                logger.info("Schedule: Next pin in %d minutes (%0.1f hours)...", interval_mins, interval_mins / 60.0)
+                # 3. Safe Zone Human Pacing: Random 20 to 30 minutes delay between pins (Non-stop for 90 Days)
+                import random
+                interval_mins = random.randint(20, 30)
+                logger.info("✅ Safe Zone Pacing: Next pin scheduled in %d minutes [90-Day Non-Stop Campaign]...", interval_mins)
                 await asyncio.sleep(interval_mins * 60)
                 
             # Exit outer loop cleanly if inner loop breaks without Exception

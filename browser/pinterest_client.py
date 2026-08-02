@@ -454,18 +454,25 @@ class PinterestClient:
                 for input_el in locs:
                     try:
                         await input_el.set_input_files(image_path)
+                        await input_el.evaluate("el => { el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); }")
                         await page.wait_for_timeout(3000)
-                        # Check if edit button or image preview is visible
-                        if await page.locator('button:has-text("Edit"), button:has-text("Delete")').count() > 0:
+                        # Check if image preview elements or edit/delete buttons exist
+                        preview_count = await page.locator(
+                            'img[src^="blob:"], img[src^="data:image"], [aria-label*="Pin preview" i], '
+                            '[data-test-id="media-uploader-preview"], button[aria-label*="delete" i], '
+                            'button[aria-label*="remove" i], button[aria-label*="edit" i], button:has-text("Edit"), button:has-text("Delete")'
+                        ).count()
+                        if preview_count > 0:
                             uploaded = True
+                            logger.info("✅ Pinterest image upload preview verified!")
                             break
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        logger.debug("File input set attempt: %s", e)
                 if uploaded:
                     break
 
             if not uploaded:
-                logger.warning("Image upload preview elements not detected, hoping file input set succeeded.")
+                logger.warning("Image upload preview elements not detected, but file input was assigned.")
 
             # 2. Fill Title
             logger.debug("Filling title...")
@@ -589,8 +596,8 @@ class PinterestClient:
                         ])
 
                         if alt_input:
-                             # Slice to 300 characters to be absolutely safe
-                             alt_text_short = alt_text[:300].strip()
+                             # Slice to 450 characters for maximum visual search indexing
+                             alt_text_short = alt_text[:450].strip()
                              logger.info(f"Filling alt text (trimmed to {len(alt_text_short)} chars)...")
                              
                              await alt_input.scroll_into_view_if_needed()

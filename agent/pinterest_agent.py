@@ -175,18 +175,33 @@ class PinterestAgent:
     ) -> tuple[bool, str]:
         """
         Check if a candidate product/keyword/ASIN/title/affiliate link is already in the database.
+        Includes fuzzy core noun matching to catch products like 'Mushroom Table Lamp' with different category tags.
         Returns: (is_duplicate: bool, reason: str)
         """
         with self.db.connection() as conn:
             # 1. Check candidate product keyword against product_name & title in DB
             if candidate_keyword:
                 kw_clean = candidate_keyword.strip().lower()
+                
+                # 1a. Exact match
                 chk = conn.execute(
                     "SELECT product_name FROM products WHERE LOWER(product_name) = ? OR LOWER(title) = ?",
                     (kw_clean, kw_clean)
                 ).fetchone()
                 if chk:
                     return True, f"Product keyword '{candidate_keyword}' already published in DB ({chk['product_name']})"
+
+                # 1b. Fully dynamic 2-3 word core noun phrase search
+                words = [w for w in re.sub(r'[^\w\s]', '', kw_clean).split() if w not in {"the", "a", "an", "and", "or", "for", "with", "set", "of", "in", "on", "to", "by", "category", "high", "commission", "decor", "aesthetic", "vintage", "modern", "minimalist", "luxury"}]
+                if len(words) >= 2:
+                    core_phrase = " ".join(words[-3:])
+                    if len(core_phrase) >= 6:
+                        chk_noun = conn.execute(
+                            "SELECT product_name FROM products WHERE LOWER(product_name) LIKE ? OR LOWER(title) LIKE ?",
+                            (f"%{core_phrase}%", f"%{core_phrase}%")
+                        ).fetchone()
+                        if chk_noun:
+                            return True, f"Dynamic product noun '{core_phrase}' already published in DB ({chk_noun['product_name']})"
 
             # 2. Check product_details (ASIN, Title, Affiliate Link)
             if product_details:
@@ -230,6 +245,83 @@ class PinterestAgent:
                         return True, f"SEO Title '{seo_data.title}' already exists in DB"
 
         return False, ""
+
+    def parse_product_keyword(self, text: str) -> str:
+        """
+        Clean raw product text from LLM/Gemini output into a clean, searchable physical product keyword.
+        Strips prefixes, emojis, punctuation, category headers, unbalanced parentheses, and trailing noise words.
+        """
+        if not text:
+            return "Minimalist Home Decor Find"
+        
+        import re
+        kw = text.strip()
+        # Remove unicode emojis and symbols
+        kw = re.sub(r'[\U00010000-\U0010ffff\u2600-\u27ff\u2b00-\u2bff\u2300-\u23ff\u2000-\u206f\u2700-\u27bf]', '', kw)
+        # Strip leading bullet points, numbers, hashes, percentages
+        kw = re.sub(r'^\s*[%#\-\*\•\d\.\)]+\s*', '', kw).strip()
+        
+        # Strip leading category / design prefixes with or without colons
+        prefix_patterns = [
+            r'(?i)^(?:Design Aesthetic|Design|Category|Product Focus|Product|Selected Product Keyword|Selected|Recommended|Option|Feature|Trend|Style|Pick|Featured Home Decor Product Pick|Featured Home Decor|Styling Placement Ideas|Placement Ideas):\s*',
+            r'(?i)^(?:Design Aesthetic|Product Focus|Featured Home Decor Product Pick|Styling Placement Ideas|Selected Product Keyword)\s+'
+        ]
+        for pat in prefix_patterns:
+            kw = re.sub(pat, '', kw).strip()
+                
+        # Fix unclosed or unbalanced parentheses/brackets
+        if kw.count('(') > kw.count(')'):
+            kw = kw.replace('(', ' ')
+        elif kw.count(')') > kw.count('('):
+            kw = kw.replace(')', ' ')
+            
+        # Remove unwanted punctuation & slashes (keep alphanumeric, space, hyphens)
+        kw = re.sub(r'[/\\:&%,\(\)\[\]"\'`\.]+', ' ', kw)
+        kw = re.sub(r'\s+', ' ', kw).strip()
+        
+        # Clean trailing and leading noise words
+        noise_words = {
+            "with", "for", "and", "or", "in", "by", "of", "set", "design", "style", 
+            "high-commission", "high commission", "category", "ambiance", "decor", 
+            "interior", "styling", "home", "focus", "pick", "ideas", "aesthetic"
+        }
+        raw_words = [w.strip(" ,.-!&()|:") for w in kw.split()]
+        words = [w for w in raw_words if w]
+        
+        while words and words[-1].lower() in noise_words:
+            words.pop()
+        while words and words[0].lower() in noise_words:
+            words.pop(0)
+            
+        cleaned = " ".join(words).strip()
+        
+        # Detect if cleaned is purely an abstract style description lacking a physical product noun
+        physical_nouns = {
+            "lamp", "light", "lights", "mirror", "tray", "rug", "shelves", "shelf", "table", 
+            "chair", "vase", "blanket", "curtain", "organizer", "caddy", "clock", "sculpture", 
+            "art", "pillow", "frame", "lighter", "holder", "box", "basket", "diffuser", 
+            "dispenser", "board", "mat", "hook", "creations", "trunk", "mugs", "mug", "cups", 
+            "cup", "pots", "pot", "pan", "kitchenware", "organizers", "drawers", "drawer", 
+            "planter", "bedding", "duvet", "sheets", "towel", "rack", "bench", "ottoman", 
+            "pouf", "tapestry", "prints", "print", "candle", "candles", "warmer", "projector", 
+            "stand", "cabinet", "benches", "desk", "sofa", "couch", "bookend", "bookends", "planters"
+        }
+        
+        cleaned_words = [w.strip(" ,.-!&()|:").lower() for w in cleaned.split()]
+        has_physical_noun = any(w in physical_nouns for w in cleaned_words if w)
+        
+        abstract_terms = {
+            "home decor", "room aesthetic", "home decor finds", "amazon finds", "lighting", 
+            "ambiance", "product focus", "styling placement ideas", "design aesthetic",
+            "mid century modern retro minimalist japandi", "mid century modern retro soft minimalist",
+            "japandi organic modern and soft minimalist", "featured home decor product pick"
+        }
+        
+        clean_normalized = " ".join(cleaned_words)
+        if len(cleaned) < 4 or clean_normalized in abstract_terms or not has_physical_noun:
+            return "Minimalist Walnut Wood Floating Shelves"
+            
+        return cleaned
 
 
     def verify_quality(self, product_details: Any, seo_data: Any, image_path: str, board_name: str) -> bool:
@@ -519,7 +611,46 @@ class PinterestAgent:
                         logger.warning("Gemini generated duplicate keyword: '%s' (%s). Retrying research...", candidate, dup_reason)
                         past_products.append(candidate)
                 else:
-                    raise Exception("Failed to generate a unique home decor product keyword after multiple attempts.")
+                    logger.warning("Gemini retries exhausted without a unique keyword. Selecting from curated home decor fallback pool...")
+                    import random
+                    fallback_pool = [
+                        "Minimalist Walnut Wood Floating Shelves",
+                        "Amber Glass Soap Dispenser Bottles Set",
+                        "Checkered Y2K Throw Blanket",
+                        "Donut Ceramic Vase for Pampas Grass",
+                        "Dimmable Sunset Projection Lamp",
+                        "Wavy Irregular Wall Mirror",
+                        "Vintage Dimmable Candle Warmer Lamp",
+                        "Chunky Cable Knit Throw Blanket",
+                        "Ribbed Fluted Glass Drinking Cups Set",
+                        "Under Sink Sliding Organizer Drawers Set",
+                        "Bamboo Bathtub Tray Caddy",
+                        "Mid-Century Mushroom Table Lamp",
+                        "Clear Acrylic Makeup Vanity Organizer",
+                        "Flame Air Diffuser Essential Oil Humidifier",
+                        "Bamboo Spice Jar Organizer Set",
+                        "100% Washed Linen Duvet Cover Set",
+                        "Bouclé Ergonomic Swivel Accent Chair",
+                        "Clear Glass Coffee Syrup Dispenser Set",
+                        "Full Length Arched Gold Metal Frame Mirror",
+                        "Acacia Wood Cutting Board & Cheese Board",
+                        "Wabi-Sabi Ceramic Decorative Flower Vase",
+                        "Cordless Rechargeable Crystal Touch Table Lamp",
+                        "Acrylic Pantry Bins Storage Containers",
+                        "Heated Towel Rack for Bathroom",
+                        "Electric Candle Lighter Rechargeable"
+                    ]
+                    past_set = set(p.lower().strip() for p in past_products)
+                    valid_candidates = [
+                        f for f in fallback_pool 
+                        if f.lower().strip() not in past_set and not self.check_is_duplicate(candidate_keyword=f)[0]
+                    ]
+                    if valid_candidates:
+                        candidate_keyword = random.choice(valid_candidates)
+                        logger.info("Selected unique fallback home decor product keyword: '%s'", candidate_keyword)
+                    else:
+                        candidate_keyword = random.choice(fallback_pool)
+                        logger.info("Using fallback home decor product keyword: '%s'", candidate_keyword)
                 return candidate_keyword
 
             if current_keyword:
@@ -561,9 +692,11 @@ class PinterestAgent:
                 is_real_book = any(b in t_low for b in book_terms) and not any(d in t_low for d in decor_exceptions)
                 
                 # 2. Anti-Fashion & Non-Home-Decor Filter (NO shoes, charms, apparel, makeup, jewelry)
-                off_niche_terms = ["shoe", "sneaker", "sandal", "boot", "heel", "charm", "keychain", "croc", "clothing", "dress", "shirt", "pants", "skirt", "jacket", "makeup", "lipstick", "mascara", "foundation", "earring", "necklace", "bracelet", "purse", "handbag"]
-                home_exceptions = ["rack", "bench", "tree", "cabinet", "organizer", "tray", "box"]
-                is_off_niche = any(term in t_low for term in off_niche_terms) and not any(h in t_low for h in home_exceptions)
+                import re
+                off_niche_terms = ["shoe", "shoes", "sneaker", "sandal", "boots", "heels", "charm", "keychain", "croc", "clothing", "dress", "shirt", "pants", "skirt", "jacket", "makeup", "lipstick", "mascara", "foundation", "earring", "necklace", "bracelet", "purse", "handbag"]
+                home_exceptions = ["rack", "bench", "tree", "cabinet", "organizer", "tray", "box", "shelf", "stand"]
+                
+                is_off_niche = any(re.search(r'\b' + re.escape(term) + r'\b', t_low) for term in off_niche_terms) and not any(h in t_low for h in home_exceptions)
 
                 if is_real_book or is_off_niche:
                     logger.warning("🚫 NON-HOME-DECOR ITEM REJECTED: '%s'. Skipping to fresh home decor category...", product_details.title)
@@ -868,12 +1001,44 @@ class PinterestAgent:
                     niche
                 )
 
+                p_price = getattr(product_details, 'price', '') or "$24.99"
+                p_rating_raw = getattr(product_details, 'rating', 4.8)
+                p_rev_raw = getattr(product_details, 'reviews', '2.4K')
+                
+                p_rating_val = 4.8
+                if p_rating_raw:
+                    m_r = re.search(r'(\d+(?:\.\d+)?)', str(p_rating_raw))
+                    if m_r:
+                        try:
+                            val = float(m_r.group(1))
+                            if 1.0 <= val <= 5.0:
+                                p_rating_val = val
+                        except Exception:
+                            pass
+
+                rev_formatted = "2.4K REVIEWS"
+                if p_rev_raw:
+                    m_rev = re.search(r'(\d+[\d\,]*)', str(p_rev_raw).replace(",", ""))
+                    if m_rev:
+                        try:
+                            num = int(m_rev.group(1))
+                            if num >= 1000:
+                                rev_formatted = f"{num // 1000}.{(num % 1000) // 100}K REVIEWS".replace(".0K", "K")
+                            elif num > 0:
+                                rev_formatted = f"{num} REVIEWS"
+                        except Exception:
+                            pass
+
+                rating_str = f"{p_rating_val:.1f} ({rev_formatted})"
+                
                 pin_image_path = self.image_tools.create_pinterest_pin(
                     raw_image_path,
                     output_dir="images",
                     title_text=curiosity_headline,
-                    category_label=category_label,
-                    cta_text=cta_text
+                    badge_text=category_label,
+                    cta_text=cta_text,
+                    price_text=str(p_price),
+                    rating_text=rating_str
                 )
 
             except Exception as e:
@@ -1069,68 +1234,4 @@ class PinterestAgent:
                     
         logger.info(f"update_pin_analytics complete. Updated database records for {updated_count} pins.")
 
-    def parse_product_keyword(self, candidate: str) -> str:
-        """
-        Parses a potentially chatty, multi-line markdown response from Gemini 
-        to extract exactly one clean home decor search query/product name.
-        """
-        candidate = candidate.strip().replace('"', "").replace("'", "")
-        
-        # Split by lines and remove empty ones
-        lines = [line.strip() for line in candidate.split('\n') if line.strip()]
-        if not lines:
-            return "trending home decor product"
-            
-        # 1. Clean list prefixes, numbered items, and bold formatting
-        for i in range(len(lines)):
-            line = lines[i]
-            line = line.replace("**", "")
-            import re
-            line = re.sub(r'^\s*[\-\*\•\d\.\)]+\s*', '', line).strip()
-            lines[i] = line
 
-        # 2. Try to locate standard plaintext search query blocks
-        for i, line in enumerate(lines):
-            line_lower = line.lower()
-            if "plaintext" in line_lower or "search query" in line_lower or "is:" in line_lower:
-                if i + 1 < len(lines):
-                    next_line = lines[i+1].strip()
-                    if next_line and not next_line.startswith("#") and len(next_line) > 3:
-                        # Ensure it doesn't contain blocklisted marketing words
-                        if not any(w in next_line.lower() for w in ["pinterest", "google", "analysis", "trends", "passive income", "profits", "based on", "following"]):
-                            return next_line
-                        
-        # 3. Known brand extraction from any line (even long sentences)
-        known_brands = [
-            "dyson", "shark", "omnilux", "dennis", "nuface", "braun", "foreo", "anua", "cosrx", 
-            "joseon", "round lab", "centella", "tatcha", "paula", "glow recipe", "baccarat", 
-            "sol de janeiro", "ysl", "black opium", "kayali", "replica", "good girl", "delina", 
-            "west elm", "anthropologie", "cb2", "urban outfitters", "crate and barrel", 
-            "merit", "huda", "milk makeup", "tower 28", "laneige", "bum bum", "tree hut", 
-            "necessaire", "osea", "eos", "l'occitane", "lume", "olaplex", "k18", "gisou", 
-            "mielle", "color wow", "ouai", "amika", "peter thomas", "shiseido", "roc", "cetaphil",
-            "cerave", "la roche-posay", "ordinary", "inkey list", "kiss lash", "emi jay", "milani",
-            "numbuzin", "rael", "kopari", "panoxyl", "loreal"
-        ]
-        
-        for line in lines:
-            line_lower = line.lower()
-            for brand in known_brands:
-                if brand in line_lower:
-                    idx = line_lower.find(brand)
-                    sub = line[idx:]
-                    for char in [".", ",", ";", "\n", "  "]:
-                        if char in sub:
-                            sub = sub.split(char)[0]
-                    sub = sub.strip()
-                    if 5 < len(sub) < 120 and not any(w in sub.lower() for w in ["pinterest", "google", "analysis", "trends", "passive income", "profits"]):
-                        return sub
-                        
-        # 4. Filter lines that don't contain blocklist words
-        for line in lines:
-            if len(line) < 90 and not line.startswith("#"):
-                if not any(w in line.lower() for w in ["pinterest", "google", "analysis", "trends", "passive income", "profits", "based on", "following"]):
-                    return line
-                    
-        # 5. Last resort fallback
-        return "trending home decor product"
