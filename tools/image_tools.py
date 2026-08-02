@@ -183,9 +183,9 @@ class ImageTools:
     def _get_system_font(font_type: str = "serif", size: int = 36, category: str = "beauty") -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
         """
         Safely retrieve ultra-luxury Monotype-style TTF fonts (Bodoni Moda, Cinzel, Playfair Display, Tenor Sans, Inter)
-        from local project fonts/ directory, falling back to Windows system fonts if needed.
-        - Headline Serif: Bodoni Moda Bold (BodoniModa-Bold.ttf) / Cinzel / Playfair Display Bold / Georgia Bold
-        - Badges & CTAs Sans-Serif: Tenor Sans (TenorSans-Regular.ttf) / Inter Bold / Outfit Bold
+        from local project fonts/ directory, falling back to Linux / macOS / Windows system fonts if needed.
+        - Headline Serif: Bodoni Moda Bold / Playfair Display Bold / Cormorant Garamond Bold / Georgia Bold
+        - Badges & CTAs Sans-Serif: Inter Bold / Outfit Bold / Tenor Sans / Arial Bold
         """
         if not HAS_PILLOW:
             return ImageFont.load_default()
@@ -196,16 +196,28 @@ class ImageTools:
         windir = os.environ.get("WINDIR", "C:\\Windows")
         sys_fonts_dir = Path(windir) / "Fonts"
 
-        search_dirs = [local_fonts_dir, sys_fonts_dir]
+        search_dirs = [
+            local_fonts_dir,
+            sys_fonts_dir,
+            Path("/usr/share/fonts"),
+            Path("/usr/share/fonts/truetype"),
+            Path("/usr/share/fonts/opentype"),
+            Path("/usr/local/share/fonts"),
+            Path("/System/Library/Fonts"),
+            Path("/Library/Fonts")
+        ]
 
         if font_type.lower() in ("serif", "luxury", "cormorant", "bodoni", "cinzel"):
             serif_candidates = [
-                "CormorantGaramond-SemiBold.ttf", "BodoniModa-Bold.ttf", "Cinzel-Regular.ttf", 
-                "PlayfairDisplay-Bold.ttf", "CormorantGaramond-Bold.ttf", "PlayfairDisplay-Regular.ttf",
-                "georgiab.ttf", "georgia.ttf", "bod_b.ttf", "timesbd.ttf"
+                "CormorantGaramond-Bold.ttf", "CormorantGaramond-SemiBold.ttf", "PlayfairDisplay-Bold.ttf",
+                "BodoniModa-Bold.ttf", "Cinzel-Regular.ttf", "PlayfairDisplay-Regular.ttf",
+                "georgiab.ttf", "georgia.ttf", "bod_b.ttf", "timesbd.ttf",
+                "DejaVuSerif-Bold.ttf", "FreeSerifBold.ttf", "LiberationSerif-Bold.ttf"
             ]
 
             for sdir in search_dirs:
+                if not sdir.exists():
+                    continue
                 for font_file in serif_candidates:
                     full_path = sdir / font_file
                     if full_path.exists():
@@ -218,20 +230,25 @@ class ImageTools:
         if font_type.lower() in ("sans_regular", "regular", "rating_regular"):
             sans_candidates = [
                 "Inter-Regular.ttf", "Inter-Bold.ttf", "Outfit-Bold.ttf", "TenorSans-Regular.ttf",
-                "segoeui.ttf", "segoeuib.ttf", "arial.ttf"
+                "segoeui.ttf", "segoeuib.ttf", "arial.ttf",
+                "DejaVuSans.ttf", "LiberationSans-Regular.ttf"
             ]
         elif font_type.lower() in ("sans_bold", "rating", "cta_bold", "cta"):
             sans_candidates = [
                 "Inter-Bold.ttf", "Outfit-Bold.ttf", "TenorSans-Regular.ttf", "Inter-Regular.ttf",
-                "segoeuib.ttf", "segoeui.ttf", "arialbd.ttf", "arial.ttf"
+                "segoeuib.ttf", "segoeui.ttf", "arialbd.ttf", "arial.ttf",
+                "DejaVuSans-Bold.ttf", "LiberationSans-Bold.ttf", "Ubuntu-B.ttf", "Roboto-Bold.ttf"
             ]
         else:
             sans_candidates = [
                 "Inter-Bold.ttf", "TenorSans-Regular.ttf", "Outfit-Bold.ttf", "Inter-Regular.ttf",
-                "segoeuib.ttf", "segoeui.ttf", "arialbd.ttf", "arial.ttf"
+                "segoeuib.ttf", "segoeui.ttf", "arialbd.ttf", "arial.ttf",
+                "DejaVuSans-Bold.ttf", "LiberationSans-Bold.ttf"
             ]
             
         for sdir in search_dirs:
+            if not sdir.exists():
+                continue
             for font_file in sans_candidates:
                 full_path = sdir / font_file
                 if full_path.exists():
@@ -240,10 +257,13 @@ class ImageTools:
                     except Exception:
                         pass
 
-        return ImageFont.load_default()
+        try:
+            return ImageFont.load_default(size=size)
+        except Exception:
+            return ImageFont.load_default()
 
     @staticmethod
-    def _draw_golden_star(draw: Any, center_x: float, center_y: float, radius: float = 9.0, fill=(245, 166, 35, 255)):
+    def _draw_golden_star(draw: Any, center_x: float, center_y: float, radius: float = 12.0, fill=(245, 166, 35, 255)):
         """Draw a crisp 100% vector 5-point golden amber star."""
         import math
         points = []
@@ -552,50 +572,23 @@ class ImageTools:
             canvas = Image.composite(glow_layer, canvas, glow_mask)
 
             # ── 2. LAYOUT SPECIFIC PARAMETERS ──
-            # Determine Card & Product placement based on current_layout
-            # Target product dominance: 75% to 85% of card visual area
+            # Target product dominance: 78% to 80% of card visual area
             card_radius = 28
-            border_width = 2
+            border_width = 1
             
-            if current_layout == "Layout A":  # Centered Hero
-                card_w, card_h = 860, 980
-                card_x = (canvas_w - card_w) // 2
-                card_y = 170
-                product_scale_factor = 0.96
-            elif current_layout == "Layout B":  # Product Left
-                card_w, card_h = 840, 960
-                card_x = (canvas_w - card_w) // 2 - 30
-                card_y = 170
-                product_scale_factor = 0.94
-            elif current_layout == "Layout C":  # Product Right
-                card_w, card_h = 840, 960
-                card_x = (canvas_w - card_w) // 2 + 30
-                card_y = 170
-                product_scale_factor = 0.94
-            elif current_layout == "Layout D":  # Close-up Hero (95%+ Dominance)
-                card_w, card_h = 880, 1020
-                card_x = (canvas_w - card_w) // 2
-                card_y = 150
-                product_scale_factor = 0.98
-            else:  # Layout E: Dual Product / Composite Card
-                card_w, card_h = 850, 970
-                card_x = (canvas_w - card_w) // 2
-                card_y = 180
-                product_scale_factor = 0.95
-            # ── 3. CANVAS & CARD SETUP (SEPHORA + RHODE + MERIT + VIOLET GREY TEMPLATE) ──
+            # ── 3. CANVAS & CARD SETUP (SEPHORA + RHODE + MERIT TEMPLATE) ──
             # Warm ivory background (#F8F5F0)
             BG_COLOR = (248, 245, 240)
             canvas = Image.new("RGBA", (canvas_w, canvas_h), (*BG_COLOR, 255))
 
             card_w = 840
-            card_h = 920
+            card_h = 800  # Balanced 800px card height to give ample room for large readable text & CTA
             card_x = (canvas_w - card_w) // 2
-            card_y = 175  # Shifted down to lower content and eliminate bottom blank space
-            card_radius = 28  # Strict 28px radius
-            border_width = 1
+            card_y = 115  # Shifted to y=115
+            product_scale_factor = 0.96
 
-            # Soft, natural, almost invisible shadow
-            shadow_offset_y = 10
+            # Soft, natural, elegant shadow
+            shadow_offset_y = 8
             shadow_expand = 6
             card_layer = Image.new("RGBA", (canvas_w, canvas_h), (0, 0, 0, 0))
             card_draw = ImageDraw.Draw(card_layer)
@@ -681,7 +674,7 @@ class ImageTools:
             # Paste product image cleanly inside white card
             canvas.paste(resized_prod, (prod_left, prod_top))
 
-            # ── 4.5. UPPER RIGHT LUXURY PRICE TAG STICKER (COLOR-HARMONIZED TO PRODUCT) ──
+            # ── 4.5. UPPER RIGHT LUXURY PRICE TAG STICKER (LARGE BOLD FONT 28pt) ──
             # Dynamically extract dominant product color palette for harmonized CTA & Price Tag
             product_accent_rgb = ImageTools._get_dynamic_cta_color(cropped_prod)
             ACCENT_FILL = (*product_accent_rgb, 255)
@@ -701,14 +694,14 @@ class ImageTools:
                     actual_price_val = "$" + actual_price_val
                     
                 price_badge_str = actual_price_val.upper()
-                price_badge_font = ImageTools._get_system_font("sans_bold", 18, category="beauty")
+                price_badge_font = ImageTools._get_system_font("sans_bold", 28, category="beauty")
                 
                 pt_draw = ImageDraw.Draw(canvas)
                 pt_bbox = pt_draw.textbbox((0, 0), price_badge_str, font=price_badge_font)
                 pt_w = pt_bbox[2] - pt_bbox[0]
                 pt_h = pt_bbox[3] - pt_bbox[1]
                 
-                pt_px, pt_py = 18, 9
+                pt_px, pt_py = 24, 12
                 pill_w = pt_w + pt_px * 2
                 pill_h = pt_h + pt_py * 2
                 
@@ -718,7 +711,7 @@ class ImageTools:
                 # Draw sleek upper-right price tag badge (Color-Harmonized ACCENT_FILL, crisp white price text)
                 pt_draw.rounded_rectangle(
                     [pt_left, pt_top, pt_left + pill_w, pt_top + pill_h],
-                    radius=18,
+                    radius=22,
                     fill=ACCENT_FILL,
                     outline=(217, 206, 194, 255),
                     width=1
@@ -731,16 +724,16 @@ class ImageTools:
                     font=price_badge_font
                 )
 
-            # ── 5. TOP CENTER OUTLINED PILL BADGE (Border #D9CEC2, Inter Medium, ALL CAPS, 0.28em spacing) ──
+            # ── 5. TOP CENTER OUTLINED PILL BADGE (LARGE BOLD FONT 24pt) ──
             draw = ImageDraw.Draw(canvas)
-            serif_font_title = ImageTools._get_system_font("cormorant", 46, category="beauty")
-            sans_font_cta = ImageTools._get_system_font("sans_bold", 22, category="beauty")
+            serif_font_title = ImageTools._get_system_font("cormorant", 56, category="beauty")
+            sans_font_cta = ImageTools._get_system_font("sans_bold", 30, category="beauty")
 
             if current_badge:
                 badge_str = ImageTools._clean_emoji_for_rendering(current_badge.strip().upper())
-                badge_font = ImageTools._get_system_font("sans_bold", 17, category="beauty")
+                badge_font = ImageTools._get_system_font("sans_bold", 24, category="beauty")
                 
-                # Apply 0.28em letter spacing (tracking) for luxury editorial badge text
+                # Apply 3px letter spacing (tracking) for luxury editorial badge text
                 tracking_px = 3
                 badge_lines = ImageTools._wrap_text(badge_str, badge_font, 780, draw)
                 badge_lines = badge_lines[:2]
@@ -752,20 +745,20 @@ class ImageTools:
                     max_line_w = max(max_line_w, l_w)
                     
                 line_bbox = draw.textbbox((0, 0), "Ag", font=badge_font)
-                b_line_h = line_bbox[3] - line_bbox[1] + 6
+                b_line_h = line_bbox[3] - line_bbox[1] + 8
                 badge_h = len(badge_lines) * b_line_h
                 
-                pill_px, pill_py = 26, 11
+                pill_px, pill_py = 28, 12
                 pill_w = max_line_w + pill_px * 2
                 pill_h = badge_h + pill_py * 2
                 
                 pill_left = (canvas_w - pill_w) // 2
-                pill_top = max(34, (card_y - pill_h) // 2)
+                pill_top = max(24, (card_y - pill_h) // 2)
                 
                 # Draw outlined pill badge (white fill, #D9CEC2 border, 1px)
                 draw.rounded_rectangle(
                     [pill_left, pill_top, pill_left + pill_w, pill_top + pill_h],
-                    radius=20,
+                    radius=22,
                     fill=(255, 255, 255, 255),
                     outline=(217, 206, 194, 255),  # #D9CEC2
                     width=1
@@ -785,7 +778,7 @@ class ImageTools:
                         curr_x += ch_w + tracking_px
                     curr_b_y += b_line_h
 
-            # ── 6. HEADLINE (Cormorant Garamond SemiBold, Title Case, #222222, 46px) ──
+            # ── 6. HEADLINE (LARGE BOLD SERIF 56pt, #222222) ──
             if title_text:
                 clean_title = ImageTools._clean_emoji_for_rendering(title_text).strip()
                 if " — " in clean_title:
@@ -799,9 +792,9 @@ class ImageTools:
                 lines = lines[:2]  # Maximum two lines
                 
                 line_bbox = draw.textbbox((0, 0), "Ag", font=serif_font_title)
-                line_height = line_bbox[3] - line_bbox[1] + 10
+                line_height = line_bbox[3] - line_bbox[1] + 12
                 
-                title_start_y = card_y + card_h + 36
+                title_start_y = card_y + card_h + 30
                 current_y = title_start_y
                 for line in lines:
                     line_bbox = draw.textbbox((0, 0), line, font=serif_font_title)
@@ -809,19 +802,19 @@ class ImageTools:
                     draw.text(
                         ((canvas_w - line_w) // 2, current_y),
                         line,
-                        fill=(34, 34, 34, 255),  # #222222 Primary Text
+                        fill=(26, 26, 26, 255),  # #1A1A1A High Contrast Text
                         font=serif_font_title
                     )
                     current_y += line_height
 
-                # ── 7. ROUNDED COLOR-HARMONIZED CTA BUTTON (Inter SemiBold 22pt) ──
+                # ── 7. ROUNDED COLOR-HARMONIZED CTA BUTTON (LARGE BOLD FONT 30pt) ──
                 cta_str = ImageTools._clean_emoji_for_rendering(current_cta.strip())
 
                 cta_bbox = draw.textbbox((0, 0), cta_str, font=sans_font_cta)
                 cta_w = cta_bbox[2] - cta_bbox[0]
                 cta_h = cta_bbox[3] - cta_bbox[1]
                 
-                cta_px, cta_py = 34, 14
+                cta_px, cta_py = 40, 16
                 btn_w = cta_w + cta_px * 2
                 btn_h = cta_h + cta_py * 2
                 
@@ -832,7 +825,7 @@ class ImageTools:
                     # Harmonized CTA fill (ACCENT_FILL)
                     draw.rounded_rectangle(
                         [btn_left, btn_top, btn_left + btn_w, btn_top + btn_h],
-                        radius=24,
+                        radius=32,
                         fill=ACCENT_FILL,
                         outline=(217, 206, 194, 255),
                         width=1
@@ -846,17 +839,16 @@ class ImageTools:
                         font=sans_font_cta
                     )
 
-            # ── 8. RATING TEXT UNDER CTA WITH VIBRANT GOLDEN STAR ★ (#F5A623 / #FFB800) ──
-            # ── 8. VERIFIED AMBER GOLDEN STAR SOCIAL PROOF RATING ──
+            # ── 8. VERIFIED AMBER GOLDEN STAR SOCIAL PROOF RATING (LARGE 24pt FONT) ──
             if rating_text:
                 clean_rating_num = rating_text.replace("★", "").replace("⭐", "").strip()
                 if clean_rating_num:
-                    text_font = ImageTools._get_system_font("sans_bold", 17, category="beauty")
+                    text_font = ImageTools._get_system_font("sans_bold", 24, category="beauty")
                     t_bbox = draw.textbbox((0, 0), clean_rating_num, font=text_font)
                     t_w = t_bbox[2] - t_bbox[0]
                     
-                    star_size = 18
-                    gap = 8
+                    star_size = 24
+                    gap = 10
                     total_r_w = star_size + gap + t_w
                     start_r_x = (canvas_w - total_r_w) // 2
                     r_y = btn_top + btn_h + 18 if title_text else card_y + card_h + 44
@@ -866,7 +858,7 @@ class ImageTools:
                         star_center_x = start_r_x + (star_size // 2)
                         star_center_y = r_y + (t_bbox[3] - t_bbox[1]) // 2 + 1
                         
-                        ImageTools._draw_golden_star(draw, star_center_x, star_center_y, radius=9.0, fill=(245, 166, 35, 255))
+                        ImageTools._draw_golden_star(draw, star_center_x, star_center_y, radius=12.0, fill=(245, 166, 35, 255))
                         
                         # 2. Draw Crystal-Clear Dark Charcoal Rating Text (#222222)
                         draw.text((start_r_x + star_size + gap, r_y), clean_rating_num, fill=(34, 34, 34, 255), font=text_font)

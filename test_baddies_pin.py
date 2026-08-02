@@ -42,8 +42,10 @@ def main():
             input_image_path=sample_img,
             output_dir="images",
             title_text=headline,
-            category_label=label,
-            cta_text=cta
+            badge_text=label,
+            cta_text=cta,
+            price_text="$24.99",
+            rating_text="4.8 (2.4K REVIEWS)"
         )
         print(f"[OK] Generated Pin: {pin_path}")
 
